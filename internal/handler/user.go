@@ -33,6 +33,7 @@ func NewUserHandler(service service.UserService, logger logging.Logger) UserHand
 // @Accept json
 // @Produce json
 // @Param body body user.BaseRequest true "User data required for authentication."
+// @Param X-User-Data header string true "User data in encoded format containing user ID and other necessary information"
 // @Success 200 {object} map[string]string "JWT token issued successfully."
 // @Failure 400 {string} string "Bad request - invalid request body."
 // @Failure 401 {string} string "Unauthorized - invalid data signature."

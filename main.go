@@ -51,17 +51,17 @@ func main() {
 	gunfightPostgres := postgres.NewGunfightRepository(postgresClient)
 	gunfightService := service.NewGunfightService(gunfightPostgres, gunfightRedis)
 	gunfightHandler := handler.NewGunfightHandler(gunfightService, logger)
-	router.NewGunfightRouter(apiRouter, gunfightHandler)
+	router.NewGunfightRouter(apiRouter, gunfightHandler, &config)
 
 	horseRepo := postgres.NewHorseRepository(postgresClient)
 	horseService := service.NewHorseService(horseRepo)
 	horseHandler := handler.NewHorseHandler(horseService, logger)
-	router.NewHorseRouter(apiRouter, horseHandler)
+	router.NewHorseRouter(apiRouter, horseHandler, &config)
 
 	moneyRepo := postgres.NewMoneyRepository(postgresClient)
 	moneyService := service.NewMoneyService(moneyRepo)
 	moneyHandler := handler.NewMoneyHandler(moneyService, logger)
-	router.NewMoneyRouter(apiRouter, moneyHandler)
+	router.NewMoneyRouter(apiRouter, moneyHandler, &config)
 
 	userRepo := postgres.NewUserRepository(postgresClient)
 	userService := service.NewUserService(userRepo)

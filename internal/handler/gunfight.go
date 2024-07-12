@@ -44,26 +44,34 @@ func NewGunfightHandler(gunfightService service.GunfightService, logger logging.
 // @Failure 500 {object} string "Internal server error"
 // @Router /gunfight/find [get]
 func (h *gunfightHandler) FindGunfight(w http.ResponseWriter, r *http.Request) {
+	userData, ok := r.Context().Value("user").(map[string]interface{})
+	if !ok {
+		http.Error(w, "User data is required", http.StatusBadRequest)
+		return
+	}
+
+	userID, ok := userData["id"].(float64)
+	if !ok {
+		http.Error(w, "User ID is required and must be a number", http.StatusBadRequest)
+		return
+	}
+
 	conn, err := h.upgradeConnection(w, r)
 	if err != nil {
 		return
 	}
-	userID, err := h.readUserID(conn)
-	if err != nil {
-		return
-	}
 
-	h.connections.Store(userID, conn)
-	defer h.connections.Delete(userID)
+	h.connections.Store(int(userID), conn)
+	defer h.connections.Delete(int(userID))
 
 	notifyChan := newSafeChannel()
 	defer notifyChan.close()
 
-	ctx := contextutils.NewContext(r, userID, "FindGunfight")
+	ctx := contextutils.NewContext(r, int(userID), "FindGunfight")
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	h.handleConnection(ctx, conn, userID, notifyChan)
+	h.handleConnection(ctx, conn, int(userID), notifyChan)
 }
 
 func (h *gunfightHandler) upgradeConnection(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error) {

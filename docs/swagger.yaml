@@ -15,10 +15,6 @@ definitions:
         example: 2000
         type: integer
         x-order: "4"
-      user_id:
-        example: 1
-        type: integer
-        x-order: "1"
     type: object
   horse.GameRequest:
     properties:
@@ -90,6 +86,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/user.BaseRequest'
+      - description: User data in encoded format containing user ID and other necessary
+          information
+        in: header
+        name: X-User-Data
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -145,18 +147,19 @@ paths:
       summary: Initiate gunfight search
       tags:
       - gunfight
-  /horse/{user_id}:
+  /horse:
     get:
       consumes:
       - application/json
       description: Fetches the horse's data and calculates its speed based on the
-        user ID provided in the path.
+        user ID provided in the context.
       parameters:
-      - description: User ID
-        in: path
-        name: user_id
+      - description: User data in encoded format containing user ID and other necessary
+          information
+        in: header
+        name: X-User-Data
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -175,18 +178,19 @@ paths:
       summary: Retrieve horse by user ID
       tags:
       - horse
-  /horse/finish/{user_id}:
+  /horse/finish:
     post:
       consumes:
       - application/json
       description: Completes the race for the horse and updates its record and earnings
-        according to the distance covered, as specified in the request body.
+        according to the distance covered, with the user ID extracted from the context.
       parameters:
-      - description: User ID
-        in: path
-        name: user_id
+      - description: User data in encoded format containing user ID and other necessary
+          information
+        in: header
+        name: X-User-Data
         required: true
-        type: integer
+        type: string
       - description: Race completion details including the distance covered.
         in: body
         name: body
@@ -202,7 +206,7 @@ paths:
           schema:
             $ref: '#/definitions/horse.GameResponse'
         "400":
-          description: Bad request - user_id is required or invalid, or the request
+          description: Bad request - user data is required or invalid, or the request
             body is malformed.
           schema:
             type: string
@@ -217,17 +221,19 @@ paths:
       summary: Finish horse race
       tags:
       - horse
-  /horse/upgrade/{user_id}:
+  /horse/upgrade:
     get:
       consumes:
       - application/json
-      description: Increases the horse's level for the user ID provided in the path.
+      description: Increases the horse's level using the user ID extracted from the
+        context.
       parameters:
-      - description: User ID
-        in: path
-        name: user_id
+      - description: User data in encoded format containing user ID and other necessary
+          information
+        in: header
+        name: X-User-Data
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -237,7 +243,7 @@ paths:
             additionalProperties: true
             type: object
         "400":
-          description: Bad request - user_id is required or invalid.
+          description: Bad request - user data is required or invalid.
           schema:
             type: string
         "404":
@@ -251,17 +257,18 @@ paths:
       summary: Upgrade horse level
       tags:
       - horse
-  /money/{user_id}:
+  /money/:
     get:
       consumes:
       - application/json
       description: Fetches the money details associated with the provided user ID.
       parameters:
-      - description: User ID
-        in: path
-        name: user_id
+      - description: User data in encoded format containing user ID and other necessary
+          information
+        in: header
+        name: X-User-Data
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:

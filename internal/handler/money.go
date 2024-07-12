@@ -3,9 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"net/http"
-	"strconv"
 	"time"
 	"wildwest/internal/service"
 	"wildwest/pkg/contextutils"
@@ -27,31 +25,29 @@ func NewMoneyHandler(service service.MoneyService, logger logging.Logger) MoneyH
 // @Tags money
 // @Accept json
 // @Produce json
-// @Param user_id path int true "User ID" "The unique identifier of the user to retrieve money details for."
+// @Param X-User-Data header string true "User data in encoded format containing user ID and other necessary information"
 // @Success 200 {object} money.BaseResponse "Returns the money details for the specified user ID."
 // @Failure 400 {string} string "Bad request - user_id is required or invalid."
 // @Failure 404 {string} string "Not found - no money record found for the user ID."
-// @Router /money/{user_id} [get]
+// @Router /money/ [get]
 func (h *moneyHandler) GetMoney(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userIDStr, ok := vars["user_id"]
+	userData, ok := r.Context().Value("user").(map[string]interface{})
 	if !ok {
-		http.Error(w, "user_id is required", http.StatusBadRequest)
+		http.Error(w, "User data is required", http.StatusBadRequest)
 		return
 	}
 
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		h.logger.Error(err.Error())
-		http.Error(w, "invalid user_id", http.StatusBadRequest)
+	userID, ok := userData["id"].(float64)
+	if !ok {
+		http.Error(w, "User ID is required and must be a number", http.StatusBadRequest)
 		return
 	}
 
-	ctx := contextutils.NewContext(r, userID, "UpgradeHorse")
+	ctx := contextutils.NewContext(r, int(userID), "UpgradeHorse")
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	money, err := h.service.GetMoney(ctx, userID)
+	money, err := h.service.GetMoney(ctx, int(userID))
 	if err != nil {
 		h.logger.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)

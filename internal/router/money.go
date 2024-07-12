@@ -4,14 +4,13 @@ import (
 	"github.com/gorilla/mux"
 	"wildwest/internal/handler"
 	"wildwest/internal/middleware"
+	"wildwest/pkg/settings"
 )
 
-func NewMoneyRouter(router *mux.Router, moneyHandler handler.MoneyHandler) {
+func NewMoneyRouter(router *mux.Router, moneyHandler handler.MoneyHandler, cfg *settings.Config) {
 	moneyRouter := router.PathPrefix("/money").Subrouter()
 
-	// Применяем AuthMiddleware ко всему horseRouter
-	moneyRouter.Use(middleware.AuthMiddleware)
+	moneyRouter.Use(middleware.AuthMiddleware(cfg))
 
-	// GET endpoint for retrieving money record by user_id
-	moneyRouter.HandleFunc("/{user_id}", moneyHandler.GetMoney).Methods("GET")
+	moneyRouter.HandleFunc("/", moneyHandler.GetMoney).Methods("GET")
 }

@@ -11,6 +11,9 @@ redis:
   port: 6379
   password: yourpassword
 
+key:
+  tg: 6967842052:AAE4TX_ujQ7U4H--gvdz-6f_ol9bO_7-edc
+
 api:
   port: 8080
 

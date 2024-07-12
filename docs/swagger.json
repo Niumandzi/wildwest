@@ -31,6 +31,13 @@
                         "schema": {
                             "$ref": "#/definitions/user.BaseRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "User data in encoded format containing user ID and other necessary information",
+                        "name": "X-User-Data",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -108,119 +115,9 @@
                 }
             }
         },
-        "/horse/finish/{user_id}": {
-            "post": {
-                "description": "Completes the race for the horse and updates its record and earnings according to the distance covered, as specified in the request body.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "horse"
-                ],
-                "summary": "Finish horse race",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Race completion details including the distance covered.",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/horse.GameRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Returns the results of the race finish with updated horse data and earnings.",
-                        "schema": {
-                            "$ref": "#/definitions/horse.GameResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request - user_id is required or invalid, or the request body is malformed.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not found - no horse found to finish race for the user ID.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error - error during the race finish process.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/horse/upgrade/{user_id}": {
+        "/horse": {
             "get": {
-                "description": "Increases the horse's level for the user ID provided in the path.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "horse"
-                ],
-                "summary": "Upgrade horse level",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Horse upgraded successfully with new level information.",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request - user_id is required or invalid.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not found - no horse found to upgrade for the user ID.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error - error during the upgrade process.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/horse/{user_id}": {
-            "get": {
-                "description": "Fetches the horse's data and calculates its speed based on the user ID provided in the path.",
+                "description": "Fetches the horse's data and calculates its speed based on the user ID provided in the context.",
                 "consumes": [
                     "application/json"
                 ],
@@ -233,10 +130,10 @@
                 "summary": "Retrieve horse by user ID",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
+                        "type": "string",
+                        "description": "User data in encoded format containing user ID and other necessary information",
+                        "name": "X-User-Data",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -262,7 +159,117 @@
                 }
             }
         },
-        "/money/{user_id}": {
+        "/horse/finish": {
+            "post": {
+                "description": "Completes the race for the horse and updates its record and earnings according to the distance covered, with the user ID extracted from the context.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "horse"
+                ],
+                "summary": "Finish horse race",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User data in encoded format containing user ID and other necessary information",
+                        "name": "X-User-Data",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Race completion details including the distance covered.",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/horse.GameRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the results of the race finish with updated horse data and earnings.",
+                        "schema": {
+                            "$ref": "#/definitions/horse.GameResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - user data is required or invalid, or the request body is malformed.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - no horse found to finish race for the user ID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error - error during the race finish process.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/horse/upgrade": {
+            "get": {
+                "description": "Increases the horse's level using the user ID extracted from the context.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "horse"
+                ],
+                "summary": "Upgrade horse level",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User data in encoded format containing user ID and other necessary information",
+                        "name": "X-User-Data",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Horse upgraded successfully with new level information.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - user data is required or invalid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - no horse found to upgrade for the user ID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error - error during the upgrade process.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/money/": {
             "get": {
                 "description": "Fetches the money details associated with the provided user ID.",
                 "consumes": [
@@ -277,10 +284,10 @@
                 "summary": "Retrieve money record",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
+                        "type": "string",
+                        "description": "User data in encoded format containing user ID and other necessary information",
+                        "name": "X-User-Data",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -312,11 +319,6 @@
             "description": "This is a horse model",
             "type": "object",
             "properties": {
-                "user_id": {
-                    "type": "integer",
-                    "x-order": "1",
-                    "example": 1
-                },
                 "level": {
                     "type": "integer",
                     "x-order": "2",

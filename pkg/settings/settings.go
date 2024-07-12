@@ -18,6 +18,9 @@ type Config struct {
 		Port     int    `yaml:"port"`
 		Password string `yaml:"password"`
 	} `yaml:"redis"`
+	KEY struct {
+		TG string `yaml:"tg"`
+	}
 	API struct {
 		Port int `yaml:"port"`
 	} `yaml:"api"`

@@ -24,7 +24,6 @@ func (s *horseService) GetHorse(ctx context.Context, userID int) (*horse.BaseRes
 	speed := data.Level * 20
 
 	horseInfo := &horse.BaseResponse{
-		UserID:   data.UserID,
 		Level:    data.Level,
 		Distance: data.Distance,
 		Speed:    speed,
