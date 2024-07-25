@@ -12,5 +12,5 @@ func NewMoneyRouter(router *mux.Router, moneyHandler handler.MoneyHandler, cfg *
 
 	moneyRouter.Use(middleware.AuthMiddleware(cfg))
 
-	moneyRouter.HandleFunc("/", moneyHandler.GetMoney).Methods("GET")
+	moneyRouter.HandleFunc("", moneyHandler.GetMoney).Methods("GET")
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"log"
 	"net/http"
@@ -45,7 +46,16 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-User-Data"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	})
+
 	apiRouter := r.PathPrefix("/api/v1").Subrouter()
+	apiRouter.Use(corsHandler.Handler)
 
 	gunfightRedis := redis.NewGunfightRedis(redisClient)
 	gunfightPostgres := postgres.NewGunfightRepository(postgresClient)
@@ -66,10 +76,11 @@ func main() {
 	userRepo := postgres.NewUserRepository(postgresClient)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService, logger)
-	router.NewUserRouter(apiRouter, userHandler)
+	router.NewUserRouter(apiRouter, userHandler, &config)
 
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	log.Println("Server started at :8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Printf("Server started at %v", config.API.Port)
+
+	log.Fatal(http.ListenAndServe(config.API.Port, r))
 }

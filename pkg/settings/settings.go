@@ -1,42 +1,64 @@
 package settings
 
 import (
-	"gopkg.in/yaml.v2"
+	"fmt"
+	"github.com/joho/godotenv"
 	"os"
+	"strconv"
 )
 
 type Config struct {
 	Database struct {
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		User     string `yaml:"user"`
-		Password string `yaml:"password"`
-		DBName   string `yaml:"dbname"`
-	} `yaml:"database"`
+		Host     string
+		Port     int
+		User     string
+		Password string
+		DBName   string
+	}
 	Redis struct {
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		Password string `yaml:"password"`
-	} `yaml:"redis"`
+		Host     string
+		Port     int
+		Password string
+	}
 	KEY struct {
-		TG string `yaml:"tg"`
+		TG string
 	}
 	API struct {
-		Port int `yaml:"port"`
-	} `yaml:"api"`
+		Port string
+	}
 	Logging struct {
-		Level string `yaml:"level"`
-	} `yaml:"logging"`
+		Level string
+	}
 }
 
 func (c *Config) ReadConfig() error {
-	yamlFile, err := os.ReadFile("configs/dev.yaml")
+	err := godotenv.Load()
 	if err != nil {
-		return err
+		fmt.Println("No .env file found or error loading .env file")
 	}
-	if err = yaml.Unmarshal(yamlFile, c); err != nil {
-		return err
+
+	c.Database.Host = os.Getenv("POSTGRES_HOST")
+	c.Database.Port, err = strconv.Atoi(os.Getenv("POSTGRES_PORT"))
+	if err != nil {
+		return fmt.Errorf("invalid POSTGRES_PORT: %v", err)
 	}
+	c.Database.User = os.Getenv("POSTGRES_USER")
+	c.Database.Password = os.Getenv("POSTGRES_PASSWORD")
+	c.Database.DBName = os.Getenv("POSTGRES_DB")
+
+	c.Redis.Host = os.Getenv("REDIS_HOST")
+	c.Redis.Port, err = strconv.Atoi(os.Getenv("REDIS_PORT"))
+	if err != nil {
+		return fmt.Errorf("invalid REDIS_PORT: %v", err)
+	}
+
+	c.Redis.Password = os.Getenv("REDIS_PASSWORD")
+
+	c.KEY.TG = os.Getenv("TG_KEY")
+
+	c.API.Port = ":" + os.Getenv("API_PORT")
+
+	c.Logging.Level = os.Getenv("LOG_LEVEL")
 
 	return nil
 }

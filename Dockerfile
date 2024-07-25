@@ -23,9 +23,6 @@ WORKDIR /root/
 # Копируйте скомпилированный файл из предыдущего шага
 COPY --from=builder /api .
 
-# Копируйте конфигурационный файл
-COPY configs/dev.yaml /root/config.yaml
-
 # Откройте порт, который использует ваше API
 EXPOSE 8080
 

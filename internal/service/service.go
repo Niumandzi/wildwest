@@ -13,15 +13,16 @@ type GunfightService interface {
 }
 
 type HorseService interface {
-	GetHorse(ctx context.Context, userID int) (*horse.BaseResponse, error)                                 //UserID из авторизации
-	UpgradeHorse(ctx context.Context, userID int) (int, error)                                             //UserID из авторизации
-	GameHorse(ctx context.Context, userID int, gameRequest horse.GameRequest) (*horse.GameResponse, error) //UserID из авторизации
+	GetHorse(ctx context.Context, userID int) (*horse.BaseResponse, error)
+	UpgradeHorse(ctx context.Context, userID int) (int, error)
+	GameHorse(ctx context.Context, userID int, gameRequest horse.GameRequest) (*horse.GameResponse, error)
 }
 
 type MoneyService interface {
-	GetMoney(ctx context.Context, userID int) (*money.BaseResponse, error) //UserID из авторизации
+	GetMoney(ctx context.Context, userID int) (*money.BaseResponse, error)
 }
 
 type UserService interface {
-	RegisterUser(ctx context.Context, userRequest user.BaseRequest) (*user.BaseResponse, error)
+	GetUser(ctx context.Context, userID int) (*user.BaseResponse, error)
+	CreateOrUpdateUser(ctx context.Context, userRequest user.BaseRequest) (*user.BaseResponse, error)
 }

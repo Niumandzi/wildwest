@@ -17,5 +17,5 @@ type MoneyHandler interface {
 }
 
 type UserHandler interface {
-	Authenticate(w http.ResponseWriter, r *http.Request)
+	CheckUser(w http.ResponseWriter, r *http.Request)
 }

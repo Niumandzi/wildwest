@@ -27,9 +27,10 @@ type HorsePostgresRepository interface {
 
 type MoneyPostgresRepository interface {
 	Get(ctx context.Context, userID int) (*money.Money, error)
-	Update(ctx context.Context, userID int, money *money.Money) (int, error)
 }
 
 type UserPostgresRepository interface {
+	Get(ctx context.Context, userID int) (*user.User, error)
 	Create(ctx context.Context, user *user.User, horse *horse.Horse, money *money.Money) error
+	Update(ctx context.Context, userID int, userUpdate *user.UpdateUser) (int, error)
 }

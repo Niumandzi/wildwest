@@ -24,7 +24,3 @@ func (r *MoneyPostgresRepository) Get(ctx context.Context, userID int) (*money.M
 	}
 	return &moneyData, nil
 }
-
-func (r *MoneyPostgresRepository) Update(ctx context.Context, userID int, money *money.Money) (int, error) {
-	return r.BaseRepository.Update(ctx, nil, "money", "user_id", userID, money)
-}

@@ -29,7 +29,7 @@ func NewMoneyHandler(service service.MoneyService, logger logging.Logger) MoneyH
 // @Success 200 {object} money.BaseResponse "Returns the money details for the specified user ID."
 // @Failure 400 {string} string "Bad request - user_id is required or invalid."
 // @Failure 404 {string} string "Not found - no money record found for the user ID."
-// @Router /money/ [get]
+// @Router /money [get]
 func (h *moneyHandler) GetMoney(w http.ResponseWriter, r *http.Request) {
 	userData, ok := r.Context().Value("user").(map[string]interface{})
 	if !ok {

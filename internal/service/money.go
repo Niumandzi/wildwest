@@ -21,7 +21,6 @@ func (s *moneyService) GetMoney(ctx context.Context, userID int) (*money.BaseRes
 	}
 
 	response := &money.BaseResponse{
-		UserID: moneyData.UserID,
 		Gold:   moneyData.Gold,
 		Silver: moneyData.Silver,
 	}

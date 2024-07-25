@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
 	"wildwest/internal/model/horse"
 	"wildwest/internal/repository"
 )
@@ -38,7 +39,14 @@ func (s *horseService) UpgradeHorse(ctx context.Context, userID int) (int, error
 		return 0, err
 	}
 
-	price := horseData.Level * 10
+	if horseData.Level >= 350 {
+		return horseData.Level, fmt.Errorf("maximum level reached")
+	}
+
+	price, err := calculateUpgradeCost(horseData.Level)
+	if err != nil {
+		return 0, err
+	}
 
 	moneyData, err := s.horsRepo.GetMoney(ctx, userID)
 	if err != nil {
@@ -50,7 +58,6 @@ func (s *horseService) UpgradeHorse(ctx context.Context, userID int) (int, error
 	}
 
 	moneyData.Silver -= price
-
 	horseData.Level += 1
 
 	err = s.horsRepo.Update(ctx, userID, horseData, moneyData)
@@ -59,6 +66,20 @@ func (s *horseService) UpgradeHorse(ctx context.Context, userID int) (int, error
 	}
 
 	return horseData.Level, nil
+}
+
+func calculateUpgradeCost(level int) (int, error) {
+	if level < 1 || level >= 350 {
+		return 0, fmt.Errorf("invalid level")
+	}
+
+	if level < 10 {
+		return level * 100, nil
+	}
+
+	level = level - 10
+	cost := int(math.Round(2000 * (math.Pow(1.05, float64(level)))))
+	return cost, nil
 }
 
 func (s *horseService) GameHorse(ctx context.Context, userID int, gameRequest horse.GameRequest) (*horse.GameResponse, error) {
@@ -72,7 +93,7 @@ func (s *horseService) GameHorse(ctx context.Context, userID int, gameRequest ho
 		return nil, err
 	}
 
-	earned := gameRequest.Distance * 2
+	earned := gameRequest.Distance
 	moneyData.Silver += earned
 
 	newRecord := false
@@ -86,11 +107,11 @@ func (s *horseService) GameHorse(ctx context.Context, userID int, gameRequest ho
 		return nil, err
 	}
 
-	result := &horse.GameResponse{
+	GameResponse := &horse.GameResponse{
 		Earned:   earned,
 		Distance: gameRequest.Distance,
 		Record:   newRecord,
 	}
 
-	return result, nil
+	return GameResponse, nil
 }

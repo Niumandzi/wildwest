@@ -15,68 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/telegram": {
-            "post": {
-                "description": "Authenticates a user by verifying the Telegram Web App data and issues a JWT if successful.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Authenticate user via Telegram",
-                "parameters": [
-                    {
-                        "description": "User data required for authentication.",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/user.BaseRequest"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "User data in encoded format containing user ID and other necessary information",
-                        "name": "X-User-Data",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "JWT token issued successfully.",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request - invalid request body.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized - invalid data signature.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error - failed to create or update user, or token generation failed.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/gunfight/find": {
             "get": {
                 "description": "Opens a websocket connection and waits to match with an opponent for a gunfight.",
@@ -275,7 +213,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/money/": {
+        "/money": {
             "get": {
                 "description": "Fetches the money details associated with the provided user ID.",
                 "consumes": [
@@ -312,6 +250,50 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not found - no money record found for the user ID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "description": "check user and his actual data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Check user and his actual data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User data in encoded format containing user ID and other necessary information",
+                        "name": "X-User-Data",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the user details.",
+                        "schema": {
+                            "$ref": "#/definitions/user.BaseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid request body.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error - failed to create or update user.",
                         "schema": {
                             "type": "string"
                         }
@@ -372,11 +354,6 @@ const docTemplate = `{
             "description": "This is a money model",
             "type": "object",
             "properties": {
-                "user_id": {
-                    "type": "integer",
-                    "x-order": "1",
-                    "example": 1
-                },
                 "gold": {
                     "type": "integer",
                     "x-order": "2",
@@ -389,7 +366,8 @@ const docTemplate = `{
                 }
             }
         },
-        "user.BaseRequest": {
+        "user.BaseResponse": {
+            "description": "This is a user model",
             "type": "object",
             "properties": {
                 "id": {
@@ -405,9 +383,13 @@ const docTemplate = `{
                     "type": "string",
                     "x-order": "3"
                 },
-                "hash": {
+                "username": {
                     "type": "string",
                     "x-order": "4"
+                },
+                "link": {
+                    "type": "string",
+                    "x-order": "5"
                 }
             }
         }
