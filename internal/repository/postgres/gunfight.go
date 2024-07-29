@@ -16,7 +16,10 @@ func NewGunfightRepository(db *gorm.DB) *GunfightPostgresRepository {
 	}
 }
 
-func (r *GunfightPostgresRepository) CreateGame(ctx context.Context, game *gunfight.Game) error {
-	_, err := r.Create(ctx, nil, "gunfight", game)
-	return err
+func (r *GunfightPostgresRepository) Create(ctx context.Context, game *gunfight.Game) (int, error) {
+	gameID, err := r.BaseRepository.Create(ctx, nil, "gunfight", game)
+	if err != nil {
+		return 0, err
+	}
+	return gameID, nil
 }

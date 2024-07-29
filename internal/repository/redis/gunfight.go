@@ -52,12 +52,7 @@ func (r *GunfightRedisRepository) FindOpponent(ctx context.Context, gold int) (i
 	return opponentID, nil
 }
 
-// RemovePlayerFromQueue удаляет игрока из очереди
+// RemovePlayerFromQueue Удаляет игрока из очереди
 func (r *GunfightRedisRepository) RemovePlayerFromQueue(ctx context.Context, userID int) error {
 	return r.redis.ZRem(ctx, "gunfight_queue", userID).Err()
-}
-
-// NotifyPlayer уведомляет игрока о начале игры
-func (r *GunfightRedisRepository) NotifyPlayer(ctx context.Context, userID int) error {
-	return r.redis.Publish(ctx, "gunfight_notifications", strconv.Itoa(userID)).Err()
 }

@@ -9,14 +9,13 @@ import (
 )
 
 type GunfightPostgresRepository interface {
-	CreateGame(ctx context.Context, game *gunfight.Game) error
+	Create(ctx context.Context, game *gunfight.Game) (int, error)
 }
 
 type GunfightRedisRepository interface {
 	AddPlayerToQueue(ctx context.Context, userID int, gold int) error
 	FindOpponent(ctx context.Context, gold int) (int, error)
 	RemovePlayerFromQueue(ctx context.Context, userID int) error
-	NotifyPlayer(ctx context.Context, userID int) error
 }
 
 type HorsePostgresRepository interface {

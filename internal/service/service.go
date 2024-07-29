@@ -8,7 +8,7 @@ import (
 )
 
 type GunfightService interface {
-	FindGunfight(ctx context.Context, userID int, notifyChan chan<- int) (int, error)
+	FindGunfight(ctx context.Context, userID int) (int, error)
 	RemovePlayerFromQueue(ctx context.Context, userID int) error
 }
 

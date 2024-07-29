@@ -16,50 +16,32 @@ func NewGunfightService(gunfightRepo repository.GunfightPostgresRepository, gunf
 	return &gunfightService{gunfightRepo: gunfightRepo, gunfightRedis: gunfightRedis}
 }
 
-func (s *gunfightService) FindGunfight(ctx context.Context, userID int, notifyChan chan<- int) (int, error) {
+func (s *gunfightService) FindGunfight(ctx context.Context, userID int) (int, error) {
 	opponentID, err := s.gunfightRedis.FindOpponent(ctx, 100)
 	if err != nil {
 		return 0, err
 	}
 
 	if opponentID != 0 {
-		// Уведомляем найденного соперника
-		err = s.gunfightRedis.NotifyPlayer(ctx, opponentID)
-		if err != nil {
+		if err = s.gunfightRedis.RemovePlayerFromQueue(ctx, opponentID); err != nil {
 			return 0, err
 		}
-
-		// Уведомляем текущего игрока
-		notifyChan <- opponentID
-
-		// Удаляем найденного соперника из очереди
-		err = s.gunfightRedis.RemovePlayerFromQueue(ctx, opponentID)
-		if err != nil {
-			return 0, err
-		}
-
 		return opponentID, nil
 	}
 
-	// Добавляем игрока в очередь
 	err = s.gunfightRedis.AddPlayerToQueue(ctx, userID, 100)
 	if err != nil {
 		return 0, err
 	}
 
-	// Ожидаем 1 минуту
 	select {
 	case <-time.After(1 * time.Minute):
-		// Удаляем игрока из очереди по истечении времени
-		err = s.gunfightRedis.RemovePlayerFromQueue(ctx, userID)
-		if err != nil {
+		if err = s.gunfightRedis.RemovePlayerFromQueue(ctx, opponentID); err != nil {
 			return 0, err
 		}
 		return 0, errors.New("no opponent found within the time limit")
 	case <-ctx.Done():
-		// Удаляем игрока из очереди при разрыве соединения
-		err = s.gunfightRedis.RemovePlayerFromQueue(ctx, userID)
-		if err != nil {
+		if err = s.gunfightRedis.RemovePlayerFromQueue(ctx, opponentID); err != nil {
 			return 0, err
 		}
 		return 0, ctx.Err()

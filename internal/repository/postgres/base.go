@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"gorm.io/gorm"
+	"reflect"
 	"wildwest/internal/errors"
 	"wildwest/pkg/contextutils"
 )
@@ -33,12 +34,28 @@ func (r *BaseRepository) Create(ctx context.Context, tx *gorm.DB, tableName stri
 	if tx != nil {
 		db = tx
 	}
+
 	result := db.WithContext(ctx).Table(tableName).Create(data)
 	if result.Error != nil {
 		contextData := contextutils.ExtractContextData(ctx)
 		return 0, errors.CreateError(contextData, tableName, result.Error)
 	}
-	return int(result.RowsAffected), nil
+
+	// Использование метаданных модели для определения первичного ключа
+	scope := db.Session(&gorm.Session{DryRun: true}).Model(data)
+	primaryKey := scope.Statement.Schema.PrioritizedPrimaryField
+	if primaryKey == nil {
+		//return 0, errors.New("no primary key found in the model")
+	}
+
+	// Получение значения первичного ключа
+	idField := reflect.ValueOf(data).Elem().FieldByName(primaryKey.DBName)
+	if !idField.IsValid() {
+		//return 0, errors.New("primary key field is missing in the data structure")
+	}
+	id := int(idField.Int())
+
+	return id, nil
 }
 
 func (r *BaseRepository) Update(ctx context.Context, tx *gorm.DB, tableName string, fieldName string, fieldValue interface{}, data interface{}) (int, error) {
