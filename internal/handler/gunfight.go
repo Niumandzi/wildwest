@@ -11,10 +11,11 @@ import (
 )
 
 type gunfightHandler struct {
-	gunfightService service.GunfightService
-	logger          logging.Logger
-	upgrader        websocket.Upgrader
-	connections     sync.Map
+	gunfightService   service.GunfightService
+	logger            logging.Logger
+	upgrader          websocket.Upgrader
+	searchConnections sync.Map // Соединения для поиска игры
+	gameConnections   sync.Map // Соединения для игры
 }
 
 func NewGunfightHandler(gunfightService service.GunfightService, logger logging.Logger) *gunfightHandler {
@@ -55,8 +56,8 @@ func (h *gunfightHandler) FindGunfight(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	h.connections.Store(userID, conn)
-	defer h.connections.Delete(userID)
+	h.searchConnections.Store(userID, conn)
+	defer h.searchConnections.Delete(userID)
 
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
@@ -72,8 +73,6 @@ func (h *gunfightHandler) FindGunfight(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	defer h.handleUserDisconnect(ctx, userID)
-
 	result, err := h.gunfightService.FindGunfight(ctx, userID)
 	if err != nil {
 		h.logger.Error("Error finding gunfight: ", err)
@@ -82,31 +81,25 @@ func (h *gunfightHandler) FindGunfight(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if result.OpponentID != 0 {
-		h.handleOpponentsFound(conn, userID, result.OpponentID, result.Message)
+		message := fmt.Sprintf("Gunfight ID: %s", result.Message)
+		h.sendMessageAndClose(conn, message, userID)
+
+		if opponentConn, ok := h.searchConnections.Load(result.OpponentID); ok {
+			h.sendMessageAndClose(opponentConn.(*websocket.Conn), message, result.OpponentID)
+		}
 	} else {
 		conn.WriteMessage(websocket.TextMessage, []byte(result.Message))
+	}
+
+	if ctx.Err() != nil {
+		h.gunfightService.RemovePlayerFromQueue(context.Background(), userID)
 	}
 }
 
 func (h *gunfightHandler) sendMessageAndClose(conn *websocket.Conn, message string, userID int) {
 	conn.WriteMessage(websocket.TextMessage, []byte(message))
 	conn.Close()
-	h.connections.Delete(userID)
-}
-
-func (h *gunfightHandler) handleOpponentsFound(conn *websocket.Conn, userID int, opponentID int, gunfightID string) {
-	message := fmt.Sprintf("Gunfight ID: %s", gunfightID)
-	h.sendMessageAndClose(conn, message, userID)
-
-	if opponentConn, ok := h.connections.Load(opponentID); ok {
-		h.sendMessageAndClose(opponentConn.(*websocket.Conn), message, opponentID)
-	}
-}
-
-func (h *gunfightHandler) handleUserDisconnect(ctx context.Context, userID int) {
-	if ctx.Err() != nil {
-		h.gunfightService.RemovePlayerFromQueue(context.Background(), userID)
-	}
+	h.searchConnections.Delete(userID)
 }
 
 func (h *gunfightHandler) extractUserID(r *http.Request) (int, error) {
