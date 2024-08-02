@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
+	"wildwest/internal/model/gunfight"
 	"wildwest/internal/model/horse"
 	"wildwest/internal/model/money"
 	"wildwest/internal/model/user"
 )
 
 type GunfightService interface {
-	FindGunfight(ctx context.Context, userID int) (int, error)
+	FindGunfight(ctx context.Context, userID int) (gunfight.QueueResponse, error)
 	RemovePlayerFromQueue(ctx context.Context, userID int) error
 }
 

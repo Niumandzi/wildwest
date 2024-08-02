@@ -3,14 +3,15 @@ package redis
 import (
 	"context"
 	"github.com/redis/go-redis/v9"
+	"time"
 )
 
 type BaseRedis struct {
 	redis *redis.Client
 }
 
-func (r *BaseRedis) Set(ctx context.Context, key string, value interface{}) error {
-	err := r.redis.Set(ctx, key, value, 0).Err()
+func (r *BaseRedis) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+	err := r.redis.Set(ctx, key, value, expiration).Err()
 	if err != nil {
 		return err
 	}

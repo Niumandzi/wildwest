@@ -42,12 +42,15 @@ func NewGunfightHandler(gunfightService service.GunfightService, logger logging.
 func (h *gunfightHandler) FindGunfight(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.extractUserID(r)
 	if err != nil {
+		h.logger.Error("Error extracting user ID: ", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	conn, err := h.upgradeConnection(w, r)
 	if err != nil {
+		h.logger.Error("Error upgrading connection: ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer conn.Close()
@@ -58,52 +61,51 @@ func (h *gunfightHandler) FindGunfight(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
-	// Мониторинг закрытия соединения
 	go func() {
-		_, _, err := conn.ReadMessage()
-		if err != nil {
-			cancel() // Отменяем контекст, если соединение закрыто
+		for {
+			if _, _, err := conn.NextReader(); err != nil {
+				h.logger.Error("Error reading from websocket: ", err)
+				conn.Close()
+				cancel()
+				break
+			}
 		}
 	}()
 
 	defer h.handleUserDisconnect(ctx, userID)
 
-	opponentID, err := h.gunfightService.FindGunfight(ctx, userID)
+	result, err := h.gunfightService.FindGunfight(ctx, userID)
 	if err != nil {
-		if err.Error() == "no opponent found within the time limit" {
-			h.handleTimeout(conn)
-		} else {
-			conn.WriteMessage(websocket.TextMessage, []byte(err.Error()))
-		}
+		h.logger.Error("Error finding gunfight: ", err)
+		conn.WriteMessage(websocket.TextMessage, []byte(err.Error()))
 		return
 	}
 
-	h.handleOpponentsFound(conn, userID, opponentID)
+	if result.OpponentID != 0 {
+		h.handleOpponentsFound(conn, userID, result.OpponentID, result.Message)
+	} else {
+		conn.WriteMessage(websocket.TextMessage, []byte(result.Message))
+	}
+}
+
+func (h *gunfightHandler) sendMessageAndClose(conn *websocket.Conn, message string, userID int) {
+	conn.WriteMessage(websocket.TextMessage, []byte(message))
+	conn.Close()
+	h.connections.Delete(userID)
+}
+
+func (h *gunfightHandler) handleOpponentsFound(conn *websocket.Conn, userID int, opponentID int, gunfightID string) {
+	message := fmt.Sprintf("Gunfight ID: %s", gunfightID)
+	h.sendMessageAndClose(conn, message, userID)
+
+	if opponentConn, ok := h.connections.Load(opponentID); ok {
+		h.sendMessageAndClose(opponentConn.(*websocket.Conn), message, opponentID)
+	}
 }
 
 func (h *gunfightHandler) handleUserDisconnect(ctx context.Context, userID int) {
 	if ctx.Err() != nil {
 		h.gunfightService.RemovePlayerFromQueue(context.Background(), userID)
-	}
-}
-
-func (h *gunfightHandler) handleTimeout(conn *websocket.Conn) {
-	message := "No opponent found within the time limit"
-	conn.WriteMessage(websocket.TextMessage, []byte(message))
-	conn.Close()
-}
-
-func (h *gunfightHandler) handleOpponentsFound(conn *websocket.Conn, userID, opponentID int) {
-	// Отправка сообщения текущему пользователю и закрытие соединения
-	message := fmt.Sprintf("Opponent found: %d", opponentID)
-	conn.WriteMessage(websocket.TextMessage, []byte(message))
-	conn.Close()
-
-	// Отправка сообщения оппоненту и закрытие его соединения
-	if opponentConn, ok := h.connections.Load(opponentID); ok {
-		opponentConn.(*websocket.Conn).WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Opponent found: %d", userID)))
-		opponentConn.(*websocket.Conn).Close()
-		h.connections.Delete(opponentID)
 	}
 }
 
